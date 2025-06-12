@@ -1,0 +1,20 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# VSCode
+.vscode/settings.json
+
+# Editor backups
+*.bak
+*.swp
+*~
+
+# Environment
+.env/
+.envrc
+*.env
+
+# Python virtual environment
+venv/
