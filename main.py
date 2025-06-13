@@ -19,6 +19,7 @@ class PathfinderVisualizer:
         self.start_pos = ()
         self.stop_pos = ()
         self.app_root = tk.Tk()
+        self.reset_button = None
         self.start_button = None
         self.field_buttons = [[None for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]     # 2 dim grid with buttons, corresponding with previous grid
         self.algo_stats_text = None
@@ -28,15 +29,19 @@ class PathfinderVisualizer:
     def on_close_app(self):                                                                             # Destroys application (with window) cleanly 
         self.app_root.destroy()
 
+    def on_reset_button_click(self):
+        self.reset_app()
+
     def on_start_button_click(self):
         self.disable_all_buttons()                                                                      # Prevent user input during path animation
         path = algos.bfs(self.grid, self.start_pos, self.stop_pos)                                      
-        if (path != None):                                                                              # If path is found
+        if (path != None):                                                                              # If path is found                                                                              
             self.show_algo_stats(path)
             for steps in path:                                                                          # Animate steps of the path
                 self.field_buttons[steps[0]][steps[1]].config(bg="green")   
                 self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
                 time.sleep(0.1)
+            self.reset_button.config(state="normal")
         else: 
             self.reset_app()
 
@@ -68,7 +73,8 @@ class PathfinderVisualizer:
         top_frame.pack(fill=tk.X, side=tk.TOP)
         close_button = tk.Button(top_frame, text="✕", command=self.on_close_app, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
         close_button.pack(side=tk.RIGHT, padx=10, pady=5)
-
+        self.reset_button = tk.Button(top_frame, text="Reset", command=self.on_reset_button_click, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
+        self.reset_button.pack(side=tk.LEFT, padx=10, pady=5)
         self.start_button = tk.Button(top_frame, text="Start BFS", command=self.on_start_button_click, fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled")
         self.start_button.pack(side=tk.LEFT, padx=10, pady=5)
 
@@ -100,7 +106,8 @@ class PathfinderVisualizer:
         # Show app
         self.app_root.mainloop()
     
-    def disable_all_buttons(self):                                                                                                   
+    def disable_all_buttons(self):           
+        self.reset_button.config(state="disabled")                                                                                        
         self.start_button.config(state="disabled")
         for i in range(len(self.field_buttons)):                                                        
             for j in range(len(self.field_buttons[i])):
@@ -111,9 +118,10 @@ class PathfinderVisualizer:
         self.grid = self.get_new_grid()
         self.start_pos = ()
         self.stop_pos = ()
+        self.reset_button.config(state="normal")
         self.start_button.config(state="disabled")
         self.algo_stats_text.config(state="normal") 
-        self.algo_stats_text.delete("2.0", tk.END)                                                                          # needs testing  + comments
+        self.algo_stats_text.delete("2.0", tk.END)                                                      # Leaves first line intact
         self.algo_stats_text.config(state="disabled")
         for i in range(len(self.field_buttons)):
             for j in range(len(self.field_buttons[i])):
