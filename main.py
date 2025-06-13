@@ -15,16 +15,30 @@ class PathfinderVisualizer:
 
     def __init__(self):
         self.current_state = AppState.SEL_START_POS                                                     # For deciding which buttons are enabled
-        self.grid = [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]                 # 2 dim grid for saving which block is free/obstacle
+        self.grid = self.get_new_grid()                                                                 # 2 dim grid for saving which block is free/obstacle
         self.start_pos = ()
         self.stop_pos = ()
         self.app_root = tk.Tk()
         self.start_button = None
         self.field_buttons = [[None for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]     # 2 dim grid with buttons, corresponding with previous grid
         self.init_app()
+        self.default_button_bg = ""                                                                     # To Save color of a default tkinter button
+
+    def get_new_grid(self):
+        return [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
     def on_close_app(self):                                                                             # Destroys application (with window) cleanly 
         self.app_root.destroy()
+
+    def reset_app(self):
+        self.current_state = AppState.SEL_START_POS
+        self.grid = self.get_new_grid()
+        self.start_pos = ()
+        self.stop_pos = ()
+        self.start_button.config(state="disabled")
+        for i in range(len(self.field_buttons)):
+            for j in range(len(self.field_buttons[i])):
+                self.field_buttons[i][j].config(state="normal", bg=self.default_button_bg)
 
     def disable_all_buttons(self):                                                                                                   
         self.start_button.config(state="disabled")
@@ -34,11 +48,14 @@ class PathfinderVisualizer:
 
     def on_start_button_click(self):
         self.disable_all_buttons()                                                                      # Prevent user input during path animation
-        path = algos.bfs(self.grid, self.start_pos, self.stop_pos)                                      # Solve pathfinding
-        for steps in path:                                                                              # Animate steps of the path
-            self.field_buttons[steps[0]][steps[1]].config(bg="green")   
-            self.app_root.update()                                                                      # Keeps UI changing when using timer.sleep
-            time.sleep(0.1)
+        path = algos.bfs(self.grid, self.start_pos, self.stop_pos)                                      
+        if (path != None):                                                                              # If path is found
+            for steps in path:                                                                          # Animate steps of the path
+                self.field_buttons[steps[0]][steps[1]].config(bg="green")   
+                self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
+                time.sleep(0.1)
+        else: 
+            self.reset_app()
 
     def on_field_button_click(self, row, column):
         if (self.current_state == AppState.SEL_START_POS):                                              # Selecting start position
@@ -59,6 +76,9 @@ class PathfinderVisualizer:
     def init_app(self):
         self.app_root.title("Pathfinder Visualizer")
         self.app_root.attributes("-fullscreen", True)
+        
+        temp_button = tk.Button()                                                                       # Temp button to copy its default color
+        self.default_button_bg = temp_button.cget("background")
 
         # Top frame with close and start button
         top_frame = tk.Frame(self.app_root)
@@ -79,7 +99,7 @@ class PathfinderVisualizer:
         # Make field of buttons with callback
         for i in range(self.GRID_SIZE):
             for j in range(self.GRID_SIZE):
-                button = tk.Button(content_frame, width=1, height=1, command=lambda row=i, column=j: self.on_field_button_click(row, column))
+                button = tk.Button(content_frame, width=1, height=1, bg=self.default_button_bg, command=lambda row=i, column=j: self.on_field_button_click(row, column))
                 self.field_buttons[i][j] = button
                 button.grid(row=i, column=j)
 
