@@ -21,35 +21,18 @@ class PathfinderVisualizer:
         self.app_root = tk.Tk()
         self.start_button = None
         self.field_buttons = [[None for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]     # 2 dim grid with buttons, corresponding with previous grid
-        self.init_app()
+        self.algo_stats_text = None
         self.default_button_bg = ""                                                                     # To Save color of a default tkinter button
-
-    def get_new_grid(self):
-        return [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+        self.init_app()
 
     def on_close_app(self):                                                                             # Destroys application (with window) cleanly 
         self.app_root.destroy()
-
-    def reset_app(self):
-        self.current_state = AppState.SEL_START_POS
-        self.grid = self.get_new_grid()
-        self.start_pos = ()
-        self.stop_pos = ()
-        self.start_button.config(state="disabled")
-        for i in range(len(self.field_buttons)):
-            for j in range(len(self.field_buttons[i])):
-                self.field_buttons[i][j].config(state="normal", bg=self.default_button_bg)
-
-    def disable_all_buttons(self):                                                                                                   
-        self.start_button.config(state="disabled")
-        for i in range(len(self.field_buttons)):                                                        
-            for j in range(len(self.field_buttons[i])):
-                self.field_buttons[i][j].config(state="disabled")
 
     def on_start_button_click(self):
         self.disable_all_buttons()                                                                      # Prevent user input during path animation
         path = algos.bfs(self.grid, self.start_pos, self.stop_pos)                                      
         if (path != None):                                                                              # If path is found
+            self.show_algo_stats(path)
             for steps in path:                                                                          # Animate steps of the path
                 self.field_buttons[steps[0]][steps[1]].config(bg="green")   
                 self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
@@ -80,11 +63,12 @@ class PathfinderVisualizer:
         temp_button = tk.Button()                                                                       # Temp button to copy its default color
         self.default_button_bg = temp_button.cget("background")
 
-        # Top frame with close and start button
+        # Top frame with close, reset and start button
         top_frame = tk.Frame(self.app_root)
         top_frame.pack(fill=tk.X, side=tk.TOP)
         close_button = tk.Button(top_frame, text="✕", command=self.on_close_app, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
         close_button.pack(side=tk.RIGHT, padx=10, pady=5)
+
         self.start_button = tk.Button(top_frame, text="Start BFS", command=self.on_start_button_click, fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled")
         self.start_button.pack(side=tk.LEFT, padx=10, pady=5)
 
@@ -92,19 +76,57 @@ class PathfinderVisualizer:
         center_wrapper = tk.Frame(self.app_root)
         center_wrapper.pack(expand=True, fill=tk.BOTH)
 
-        # Content frame with the field buttons
+        # Content frame with the field button grid and algo stats text
         content_frame = tk.Frame(center_wrapper)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
+        
+        # Frame for the field button grid (left side)
+        button_grid_frame = tk.Frame(content_frame)
+        button_grid_frame.pack(side=tk.LEFT)
 
         # Make field of buttons with callback
         for i in range(self.GRID_SIZE):
             for j in range(self.GRID_SIZE):
-                button = tk.Button(content_frame, width=1, height=1, bg=self.default_button_bg, command=lambda row=i, column=j: self.on_field_button_click(row, column))
+                button = tk.Button(button_grid_frame, width=1, height=1, bg=self.default_button_bg, command=lambda row=i, column=j: self.on_field_button_click(row, column))
                 self.field_buttons[i][j] = button
                 button.grid(row=i, column=j)
+        
+        # Make a text block that will hold algo stats
+        self.algo_stats_text = tk.Text(content_frame, height=5, width=40)
+        self.algo_stats_text.insert("1.0", "Algo stats: ")
+        self.algo_stats_text.config(state="disabled")
+        self.algo_stats_text.pack(side=tk.RIGHT, padx=10)
 
         # Show app
         self.app_root.mainloop()
+    
+    def disable_all_buttons(self):                                                                                                   
+        self.start_button.config(state="disabled")
+        for i in range(len(self.field_buttons)):                                                        
+            for j in range(len(self.field_buttons[i])):
+                self.field_buttons[i][j].config(state="disabled")
+
+    def reset_app(self):
+        self.current_state = AppState.SEL_START_POS
+        self.grid = self.get_new_grid()
+        self.start_pos = ()
+        self.stop_pos = ()
+        self.start_button.config(state="disabled")
+        self.algo_stats_text.config(state="normal") 
+        self.algo_stats_text.delete("2.0", tk.END)                                                                          # needs testing  + comments
+        self.algo_stats_text.config(state="disabled")
+        for i in range(len(self.field_buttons)):
+            for j in range(len(self.field_buttons[i])):
+                self.field_buttons[i][j].config(state="normal", bg=self.default_button_bg)
+
+    def show_algo_stats(self, path):
+        self.algo_stats_text.config(state="normal")
+        self.algo_stats_text.insert("end", f"\n\n\t{len(path)} steps needed")                           # Leaves first line intact
+        self.algo_stats_text.config(state="disabled")
+
+    def get_new_grid(self):
+        return [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+
 
 if __name__ == "__main__":
     pfv = PathfinderVisualizer()
