@@ -2,6 +2,7 @@
 
 import algos
 from enum import Enum
+import time
 import tkinter as tk
 
 class AppState(Enum):
@@ -25,10 +26,19 @@ class PathfinderVisualizer:
     def on_close_app(self):
         self.app_root.destroy()
 
-    def on_start_button_click(self):
-        path = algos.bfs(self.grid, self.start_pos, self.stop_pos)
+    def disable_all_buttons(self):                                                  
+        self.start_button.config(state="disabled")
+        for i in range(len(self.field_buttons)):
+            for j in range(len(self.field_buttons[i])):
+                self.field_buttons[i][j].config(state="disabled")
 
-        print(path)
+    def on_start_button_click(self):
+        self.disable_all_buttons()                                        
+        path = algos.bfs(self.grid, self.start_pos, self.stop_pos)
+        for steps in path:
+            self.field_buttons[steps[0]][steps[1]].config(bg="green")   
+            self.app_root.update()                                                  # Keeps UI changing after timer.sleep
+            time.sleep(0.1)                                                         # To animate path in steps
 
     def on_field_button_click(self, row, column):
         if (self.current_state == AppState.SEL_START_POS):
@@ -38,10 +48,14 @@ class PathfinderVisualizer:
 
         elif (self.current_state == AppState.SEL_STOP_POS):
             self.field_buttons[row][column].config(state="disabled", bg="red")
-            self.stop_pos = (row, column)
             self.start_button.config(state="normal")
+            self.stop_pos = (row, column)
             self.current_state = AppState.SEL_OBSTACLES_POS
-        
+
+        elif (self.current_state == AppState.SEL_OBSTACLES_POS):
+            self.field_buttons[row][column].config(state="disabled", bg="grey")
+            self.grid[row][column] = 1
+
     def init_app(self):
         self.app_root.title("Pathfinder Visualizer")
         self.app_root.attributes("-fullscreen", True)
