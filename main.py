@@ -34,6 +34,7 @@ class PathfinderVisualizer:
 
     def on_start_button_click(self):
         self.disable_all_buttons()                                                                      # Prevent user input during animations
+        #algo_results = algos.dijkstra(self.grid, self.start_pos, self.stop_pos)
         algo_results = algos.bfs(self.grid, self.start_pos, self.stop_pos)
         if (algo_results != None):                                                                      # If path is found
             self.show_algo_stats(algo_results)
