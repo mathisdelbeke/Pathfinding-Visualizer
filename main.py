@@ -33,14 +33,12 @@ class PathfinderVisualizer:
         self.reset_app()
 
     def on_start_button_click(self):
-        self.disable_all_buttons()                                                                      # Prevent user input during path animation
-        path = algos.bfs(self.grid, self.start_pos, self.stop_pos)                                      
-        if (path != None):                                                                              # If path is found                                                                              
-            self.show_algo_stats(path)
-            for steps in path:                                                                          # Animate steps of the path
-                self.field_buttons[steps[0]][steps[1]].config(bg="green")   
-                self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
-                time.sleep(0.1)
+        self.disable_all_buttons()                                                                      # Prevent user input during animations
+        algo_results = algos.bfs(self.grid, self.start_pos, self.stop_pos)
+        if (algo_results != None):                                                                      # If path is found
+            self.show_algo_stats(algo_results)
+            self.animate_all_visited(algo_results.visited_in_order)
+            self.animate_path(algo_results.path)
             self.reset_button.config(state="normal")
         else: 
             self.reset_app()
@@ -105,13 +103,6 @@ class PathfinderVisualizer:
 
         # Show app
         self.app_root.mainloop()
-    
-    def disable_all_buttons(self):           
-        self.reset_button.config(state="disabled")                                                                                        
-        self.start_button.config(state="disabled")
-        for i in range(len(self.field_buttons)):                                                        
-            for j in range(len(self.field_buttons[i])):
-                self.field_buttons[i][j].config(state="disabled")
 
     def reset_app(self):
         self.current_state = AppState.SEL_START_POS
@@ -127,9 +118,29 @@ class PathfinderVisualizer:
             for j in range(len(self.field_buttons[i])):
                 self.field_buttons[i][j].config(state="normal", bg=self.default_button_bg)
 
-    def show_algo_stats(self, path):
+    def disable_all_buttons(self):           
+        self.reset_button.config(state="disabled")                                                                                        
+        self.start_button.config(state="disabled")
+        for i in range(len(self.field_buttons)):                                                        
+            for j in range(len(self.field_buttons[i])):
+                self.field_buttons[i][j].config(state="disabled")
+
+    def animate_all_visited(self, visited_in_order):
+        for visit in visited_in_order:
+            self.field_buttons[visit[0]][visit[1]].config(bg="orange")
+            self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
+            time.sleep(0.02)
+
+    def animate_path(self, path):
+        for step in path:                                                             
+            self.field_buttons[step[0]][step[1]].config(bg="green")   
+            self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
+            time.sleep(0.1)
+    
+    def show_algo_stats(self, algo_results):
         self.algo_stats_text.config(state="normal")
-        self.algo_stats_text.insert("end", f"\n\n\t{len(path)} steps needed")                           # Leaves first line intact
+        self.algo_stats_text.insert("end", f"\n\n\t{len(algo_results.path)} steps")               
+        self.algo_stats_text.insert("end", f"\n\t{len(algo_results.visited_in_order)} visited")
         self.algo_stats_text.config(state="disabled")
 
     def get_new_grid(self):
