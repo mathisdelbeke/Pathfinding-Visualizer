@@ -38,7 +38,7 @@ class PathfinderVisualizer:
         algo_results = algos.bfs(self.grid, self.start_pos, self.stop_pos)
         if (algo_results != None):                                                                      # If path is found
             self.show_algo_stats(algo_results)
-            self.animate_all_visited(algo_results.visited_in_order)
+            self.animate_discovered_in_order(algo_results.discovered_in_order)
             self.animate_path(algo_results.path)
             self.reset_button.config(state="normal")
         else: 
@@ -126,8 +126,8 @@ class PathfinderVisualizer:
             for j in range(len(self.field_buttons[i])):
                 self.field_buttons[i][j].config(state="disabled")
 
-    def animate_all_visited(self, visited_in_order):
-        for visit in visited_in_order:
+    def animate_discovered_in_order(self, discovered_in_order):
+        for visit in discovered_in_order:
             self.field_buttons[visit[0]][visit[1]].config(bg="orange")
             self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
             time.sleep(0.02)
@@ -141,7 +141,7 @@ class PathfinderVisualizer:
     def show_algo_stats(self, algo_results):
         self.algo_stats_text.config(state="normal")
         self.algo_stats_text.insert("end", f"\n\n\t{len(algo_results.path)} steps")               
-        self.algo_stats_text.insert("end", f"\n\t{len(algo_results.visited_in_order)} visited")
+        self.algo_stats_text.insert("end", f"\n\t{len(algo_results.discovered_in_order)} discovered")
         self.algo_stats_text.config(state="disabled")
 
     def get_new_grid(self):
