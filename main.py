@@ -20,7 +20,7 @@ class PathfinderVisualizer:
         self.stop_pos = ()
         self.app_root = tk.Tk()
         self.reset_button = None
-        self.start_button = None
+        self.start_buttons = []
         self.field_buttons = [[None for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]     # 2 dim grid with buttons, corresponding with previous grid
         self.algo_stats_text = None
         self.default_button_bg = ""                                                                     # To Save color of a default tkinter button
@@ -32,10 +32,18 @@ class PathfinderVisualizer:
     def on_reset_button_click(self):
         self.reset_app()
 
-    def on_start_button_click(self):
+    def on_start_button_click(self, selected_algo):
         self.disable_all_buttons()                                                                      # Prevent user input during animations
-        #algo_results = algos.dijkstra(self.grid, self.start_pos, self.stop_pos)
-        algo_results = algos.bfs(self.grid, self.start_pos, self.stop_pos)
+        algo_results = None
+        if (selected_algo == "BFS"):
+            algo_results = algos.bfs(self.grid, self.start_pos, self.stop_pos)
+
+        elif(selected_algo == "Dijkstra"):
+            algo_results = algos.dijkstra(self.grid, self.start_pos, self.stop_pos)
+
+        elif(selected_algo == "A*"):
+            algo_results = algos.a_star(self.grid, self.start_pos, self.stop_pos)
+            
         if (algo_results != None):                                                                      # If path is found
             self.show_algo_stats(algo_results)
             self.animate_discovered_in_order(algo_results.discovered_in_order)
@@ -52,7 +60,7 @@ class PathfinderVisualizer:
 
         elif (self.current_state == AppState.SEL_STOP_POS):                                             # Selecting stop position
             self.field_buttons[row][column].config(state="disabled", bg="red")
-            self.start_button.config(state="normal")                                                    # Algo may be started now
+            self.enable_start_buttons()                                                                 # Algo may be started now
             self.stop_pos = (row, column)
             self.current_state = AppState.SEL_OBSTACLES_POS
 
@@ -74,8 +82,12 @@ class PathfinderVisualizer:
         close_button.pack(side=tk.RIGHT, padx=10, pady=5)
         self.reset_button = tk.Button(top_frame, text="Reset", command=self.on_reset_button_click, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
         self.reset_button.pack(side=tk.LEFT, padx=10, pady=5)
-        self.start_button = tk.Button(top_frame, text="Start BFS", command=self.on_start_button_click, fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled")
-        self.start_button.pack(side=tk.LEFT, padx=10, pady=5)
+        self.start_buttons.append(tk.Button(top_frame, text="Start BFS", command=lambda: self.on_start_button_click("BFS"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons[0].pack(side=tk.LEFT, padx=10, pady=5)
+        self.start_buttons.append(tk.Button(top_frame, text="Start Dij", command=lambda: self.on_start_button_click("Dijkstra"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons[1].pack(side=tk.LEFT, padx=10, pady=5)
+        self.start_buttons.append(tk.Button(top_frame, text="Start A*", command=lambda: self.on_start_button_click("A*"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons[2].pack(side=tk.LEFT, padx=10, pady=5)
 
         # Wrapper frame to center content frame
         center_wrapper = tk.Frame(self.app_root)
@@ -111,7 +123,7 @@ class PathfinderVisualizer:
         self.start_pos = ()
         self.stop_pos = ()
         self.reset_button.config(state="normal")
-        self.start_button.config(state="disabled")
+        self.disable_start_buttons()
         self.algo_stats_text.config(state="normal") 
         self.algo_stats_text.delete("2.0", tk.END)                                                      # Leaves first line intact
         self.algo_stats_text.config(state="disabled")
@@ -121,10 +133,18 @@ class PathfinderVisualizer:
 
     def disable_all_buttons(self):           
         self.reset_button.config(state="disabled")                                                                                        
-        self.start_button.config(state="disabled")
+        self.disable_start_buttons()
         for i in range(len(self.field_buttons)):                                                        
             for j in range(len(self.field_buttons[i])):
                 self.field_buttons[i][j].config(state="disabled")
+
+    def enable_start_buttons(self):
+        for button in self.start_buttons:
+            button.config(state="normal")
+
+    def disable_start_buttons(self):
+        for button in self.start_buttons:
+            button.config(state="disable")
 
     def animate_discovered_in_order(self, discovered_in_order):
         for visit in discovered_in_order:

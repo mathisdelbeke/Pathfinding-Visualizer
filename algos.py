@@ -63,7 +63,6 @@ def dijkstra(grid, start, destination):
 
     while heap:
         current_dist, x, y = heapq.heappop(heap)
-
         if (x, y) == destination:
             # Reconstruct path
             while (x, y) != start:
@@ -85,4 +84,47 @@ def dijkstra(grid, start, destination):
     return None  # No path found
 
 
-# are both visited_in_order fair to compare???
+def a_star(grid, start, destination):
+    
+    def heuristic(a, b):                                                    # Manhattan distance
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+    path_found = []
+    discovered_in_order = []
+
+    rows, cols = len(grid), len(grid[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+    open_set = []
+    heapq.heappush(open_set, (0 + heuristic(start, destination), 0, start))  # (f, g, position)
+
+    parent = {}
+    g_score = {start: 0}
+
+    while open_set:
+        _, current_g, current = heapq.heappop(open_set)
+        if current == destination:
+            # Reconstruct path
+            while current in parent:
+                path_found.append(current)
+                current = parent[current]
+            path_found.append(start)
+            return AlgoResults(path_found[::-1], discovered_in_order)
+
+        for dx, dy in directions:
+            neighbor = (current[0] + dx, current[1] + dy)
+
+            if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
+                if grid[neighbor[0]][neighbor[1]] == 1:
+                    continue
+
+                tentative_g = current_g + 1
+
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                    g_score[neighbor] = tentative_g
+                    f = tentative_g + heuristic(neighbor, destination)
+                    heapq.heappush(open_set, (f, tentative_g, neighbor))
+                    parent[neighbor] = current
+                    discovered_in_order.append(neighbor)
+
+    return None  # No path found
