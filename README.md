@@ -1,6 +1,9 @@
-Simple tkinter application to visualize how BFS (could be different algo) found the shortest path trhough a maze of obstacles.
+Simple tkinter application to visualize how pathfinding algos (BFS, Dijkstra, A*) find the shortest path trhough a maze of obstacles.
+All directions (up, down, left, right) are of equal cost. 
 
-![image](https://github.com/user-attachments/assets/c3d67c0e-65a5-4787-9f8c-5aa06a2d6e6d)
-![image](https://github.com/user-attachments/assets/df10fb32-eda0-4610-8429-e0c1af96d38e)
-![image](https://github.com/user-attachments/assets/bd695ceb-38b3-44bc-a0be-84a9176a91d8)
-![image](https://github.com/user-attachments/assets/9b44a7b2-44b0-4d54-8d16-b5d1c3abb727)
+![image](https://github.com/user-attachments/assets/d1719511-8ee2-4b4f-8c96-1cb870f3c789)
+![image](https://github.com/user-attachments/assets/a34838fd-0b52-479b-a3a7-d384797bf107)
+![image](https://github.com/user-attachments/assets/104a38a0-e2fa-4cb2-a3ee-608befa12f6a)
+![image](https://github.com/user-attachments/assets/8d902151-fac2-4502-9ee1-cffe55124eec)
+![image](https://github.com/user-attachments/assets/fa474675-ba9b-4599-b031-978deef84d78)
+
