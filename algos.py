@@ -55,14 +55,14 @@ def dijkstra(grid, start, destination):
     rows, cols = len(grid), len(grid[0])
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     
-    dist = [[float('inf')] * cols for _ in range(rows)]
-    dist[start[0]][start[1]] = 0
+    dist = [[float('inf')] * cols for _ in range(rows)]                     # Distance from start to all the rest, initial infinit
+    dist[start[0]][start[1]] = 0                                            # Start to start has distance of 0
     parent = [[None] * cols for _ in range(rows)]
 
-    heap = [(0, start[0], start[1])]
+    heap = [(0, start[0], start[1])]                                        # Priority queue with discovered nodes with distance to start
 
     while heap:
-        current_dist, x, y = heapq.heappop(heap)
+        current_dist, x, y = heapq.heappop(heap)                            # Pops cell with smallest distance from start, greedy
         if (x, y) == destination:
             # Reconstruct path
             while (x, y) != start:
@@ -74,8 +74,8 @@ def dijkstra(grid, start, destination):
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
             if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] == 0:
-                new_dist = current_dist + 1
-                if new_dist < dist[nx][ny]:
+                new_dist = current_dist + 1                                 # Every jump is cost of 1
+                if new_dist < dist[nx][ny]:                                 # Might rediscovered a node, but now with a shorter path
                     dist[nx][ny] = new_dist
                     parent[nx][ny] = (x, y)
                     heapq.heappush(heap, (new_dist, nx, ny))
@@ -84,25 +84,24 @@ def dijkstra(grid, start, destination):
     return None  # No path found
 
 
-def a_star(grid, start, destination):
-    
-    def heuristic(a, b):                                                    # Manhattan distance
-        return abs(a[0] - b[0]) + abs(a[1] - b[1])
-    
+def a_star(grid, start, destination): 
     path_found = []
     discovered_in_order = []
 
     rows, cols = len(grid), len(grid[0])
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-    open_set = []
-    heapq.heappush(open_set, (0 + heuristic(start, destination), 0, start))  # (f, g, position)
+    parent = {}                                                                     # Dictionary with tuple coords as key, instead of 2 dim array
+    g_score = {start: 0}                                                            # Known cost from start to nodes (no estimate)
 
-    parent = {}
-    g_score = {start: 0}
+    def heuristic(a, b):                                                            # Heuristic estimate, Manhattan distance
+        return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    
+    open_set = []
+    heapq.heappush(open_set, (0 + heuristic(start, destination), 0, start))         # Priority queue with discovered nodes with distance to start (f, g, position)
 
     while open_set:
-        _, current_g, current = heapq.heappop(open_set)
+        _, current_g, current = heapq.heappop(open_set)                             # Pops cell with smallest f = g + h, greedy
         if current == destination:
             # Reconstruct path
             while current in parent:
@@ -113,16 +112,15 @@ def a_star(grid, start, destination):
 
         for dx, dy in directions:
             neighbor = (current[0] + dx, current[1] + dy)
-
             if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
-                if grid[neighbor[0]][neighbor[1]] == 1:
+                if grid[neighbor[0]][neighbor[1]] == 1:                             # If obstacle
                     continue
 
-                tentative_g = current_g + 1
+                tentative_g = current_g + 1                                         # Every jump is cost of 1 
 
-                if neighbor not in g_score or tentative_g < g_score[neighbor]:
+                if neighbor not in g_score or tentative_g < g_score[neighbor]:      # Might rediscovered a node, but now with a shorter known path
                     g_score[neighbor] = tentative_g
-                    f = tentative_g + heuristic(neighbor, destination)
+                    f = tentative_g + heuristic(neighbor, destination)              # Heuristic estimate + acutal cost from start to node
                     heapq.heappush(open_set, (f, tentative_g, neighbor))
                     parent[neighbor] = current
                     discovered_in_order.append(neighbor)

@@ -150,7 +150,7 @@ class PathfinderVisualizer:
         for visit in discovered_in_order:
             self.field_buttons[visit[0]][visit[1]].config(bg="orange")
             self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
-            time.sleep(0.02)
+            time.sleep(0.01)
 
     def animate_path(self, path):
         for step in path:                                                             
