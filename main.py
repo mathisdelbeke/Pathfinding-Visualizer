@@ -10,17 +10,32 @@ class AppState(Enum):
     SEL_STOP_POS = 1
     SEL_OBSTACLES_POS = 2
 
+class ObstacleType(Enum):
+    WALL = 0
+    WATER = 1
+
 class PathfinderVisualizer:
     GRID_SIZE = 30                                                                                      # For drawing the 2 dim grid (e.g. 30 x 30)
+    start_pos_color = "red"
+    stop_pos_color = "red"
+    reset_button_color = "red"
+    start_algos_button_color = "blue"
+    wall_color = "grey"
+    water_color = "blue"
+    discovered_color = "orange"
+    path_color = "green"
 
     def __init__(self):
         self.current_state = AppState.SEL_START_POS                                                     # For deciding which buttons are enabled
+        self.current_obstacle_type = ObstacleType.WALL
         self.grid = self.get_new_grid()                                                                 # 2 dim grid for saving which block is free/obstacle
         self.start_pos = ()
         self.stop_pos = ()
         self.app_root = tk.Tk()
         self.reset_button = None
         self.start_buttons = []
+        self.water_button = None
+        self.wall_button = None
         self.field_buttons = [[None for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]     # 2 dim grid with buttons, corresponding with previous grid
         self.algo_stats_text = None
         self.default_button_bg = ""                                                                     # To Save color of a default tkinter button
@@ -52,21 +67,34 @@ class PathfinderVisualizer:
         else: 
             self.reset_app()
 
+    def on_select_obstacle_click(self, obstacle_type):
+        self.current_obstacle_type = obstacle_type
+        if (self.current_obstacle_type == ObstacleType.WALL):
+            self.water_button.config(state="normal")
+            self.wall_button.config(state="disabled")
+        elif (self.current_obstacle_type == ObstacleType.WATER):
+            self.wall_button.config(state="normal")
+            self.water_button.config(state="disabled")
+
     def on_field_button_click(self, row, column):
         if (self.current_state == AppState.SEL_START_POS):                                              # Selecting start position
-            self.field_buttons[row][column].config(state="disabled", bg="blue")
+            self.field_buttons[row][column].config(state="disabled", bg=self.start_pos_color)
             self.start_pos = (row, column)
             self.current_state = AppState.SEL_STOP_POS
 
         elif (self.current_state == AppState.SEL_STOP_POS):                                             # Selecting stop position
-            self.field_buttons[row][column].config(state="disabled", bg="red")
+            self.field_buttons[row][column].config(state="disabled", bg=self.stop_pos_color)
             self.enable_start_buttons()                                                                 # Algo may be started now
             self.stop_pos = (row, column)
             self.current_state = AppState.SEL_OBSTACLES_POS
 
         elif (self.current_state == AppState.SEL_OBSTACLES_POS):                                        # Selecting blocks as obstacles
-            self.field_buttons[row][column].config(state="disabled", bg="grey") 
-            self.grid[row][column] = 1                                                                  # Save obstacle in grid
+            if (self.current_obstacle_type == ObstacleType.WALL):
+                self.field_buttons[row][column].config(state="disabled", bg=self.wall_color) 
+                self.grid[row][column] = 1                                                              # Save obstacle in grid
+            elif(self.current_obstacle_type == ObstacleType.WATER):
+                self.field_buttons[row][column].config(state="disabled", bg=self.water_color)
+                self.grid[row][column] = 1
 
     def init_app(self):
         self.app_root.title("Pathfinder Visualizer")
@@ -80,13 +108,13 @@ class PathfinderVisualizer:
         top_frame.pack(fill=tk.X, side=tk.TOP)
         close_button = tk.Button(top_frame, text="✕", command=self.on_close_app, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
         close_button.pack(side=tk.RIGHT, padx=10, pady=5)
-        self.reset_button = tk.Button(top_frame, text="Reset", command=self.on_reset_button_click, fg="red", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
+        self.reset_button = tk.Button(top_frame, text="Reset", command=self.on_reset_button_click, fg=self.reset_button_color, bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat")
         self.reset_button.pack(side=tk.LEFT, padx=10, pady=5)
-        self.start_buttons.append(tk.Button(top_frame, text="Start BFS", command=lambda: self.on_start_button_click("BFS"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons.append(tk.Button(top_frame, text="Start BFS", command=lambda: self.on_start_button_click("BFS"), fg=self.start_algos_button_color, bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
         self.start_buttons[0].pack(side=tk.LEFT, padx=10, pady=5)
-        self.start_buttons.append(tk.Button(top_frame, text="Start Dij", command=lambda: self.on_start_button_click("Dijkstra"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons.append(tk.Button(top_frame, text="Start Dij", command=lambda: self.on_start_button_click("Dijkstra"), fg=self.start_algos_button_color, bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
         self.start_buttons[1].pack(side=tk.LEFT, padx=10, pady=5)
-        self.start_buttons.append(tk.Button(top_frame, text="Start A*", command=lambda: self.on_start_button_click("A*"), fg="blue", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
+        self.start_buttons.append(tk.Button(top_frame, text="Start A*", command=lambda: self.on_start_button_click("A*"), fg=self.start_algos_button_color, bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled"))
         self.start_buttons[2].pack(side=tk.LEFT, padx=10, pady=5)
 
         # Wrapper frame to center content frame
@@ -96,6 +124,18 @@ class PathfinderVisualizer:
         # Content frame with the field button grid and algo stats text
         content_frame = tk.Frame(center_wrapper)
         content_frame.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Buttons to select which obstacle to place
+        self.wall_button = tk.Button(content_frame, text="Walls", command=lambda: self.on_select_obstacle_click(ObstacleType.WALL), fg="black", bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="disabled")
+        self.wall_button.pack(side=tk.RIGHT, padx=10, pady=5)
+        self.water_button = tk.Button(content_frame, text="Water", command=lambda: self.on_select_obstacle_click(ObstacleType.WATER), fg=self.water_color, bg="white", font=("Arial", 16, "bold"), borderwidth=0, relief="flat", state="normal")
+        self.water_button.pack(side=tk.RIGHT, padx=10, pady=5)
+
+        # Make a text block that will hold algo stats
+        self.algo_stats_text = tk.Text(content_frame, height=5, width=40)
+        self.algo_stats_text.insert("1.0", "Algo stats: ")
+        self.algo_stats_text.config(state="disabled")
+        self.algo_stats_text.pack(side=tk.RIGHT, padx=10)
         
         # Frame for the field button grid (left side)
         button_grid_frame = tk.Frame(content_frame)
@@ -108,17 +148,14 @@ class PathfinderVisualizer:
                 self.field_buttons[i][j] = button
                 button.grid(row=i, column=j)
         
-        # Make a text block that will hold algo stats
-        self.algo_stats_text = tk.Text(content_frame, height=5, width=40)
-        self.algo_stats_text.insert("1.0", "Algo stats: ")
-        self.algo_stats_text.config(state="disabled")
-        self.algo_stats_text.pack(side=tk.RIGHT, padx=10)
-
         # Show app
         self.app_root.mainloop()
 
     def reset_app(self):
         self.current_state = AppState.SEL_START_POS
+        self.current_obstacle_type = ObstacleType.WALL
+        self.wall_button.config(state="disabled")
+        self.water_button.config(state="normal")
         self.grid = self.get_new_grid()
         self.start_pos = ()
         self.stop_pos = ()
@@ -148,13 +185,13 @@ class PathfinderVisualizer:
 
     def animate_discovered_in_order(self, discovered_in_order):
         for visit in discovered_in_order:
-            self.field_buttons[visit[0]][visit[1]].config(bg="orange")
+            self.field_buttons[visit[0]][visit[1]].config(bg=self.discovered_color)
             self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
             time.sleep(0.01)
 
     def animate_path(self, path):
         for step in path:                                                             
-            self.field_buttons[step[0]][step[1]].config(bg="green")   
+            self.field_buttons[step[0]][step[1]].config(bg=self.path_color)   
             self.app_root.update()                                                                  # Keeps UI changing when using timer.sleep
             time.sleep(0.1)
     
