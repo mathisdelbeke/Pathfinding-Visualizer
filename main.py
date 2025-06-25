@@ -25,6 +25,9 @@ class PathfinderVisualizer:
     discovered_color = "orange"
     path_color = "green"
 
+    wall_cost = float('inf')
+    water_cost = 5
+
     def __init__(self):
         self.current_state = AppState.SEL_START_POS                                                     # For deciding which buttons are enabled
         self.current_obstacle_type = ObstacleType.WALL
@@ -91,10 +94,11 @@ class PathfinderVisualizer:
         elif (self.current_state == AppState.SEL_OBSTACLES_POS):                                        # Selecting blocks as obstacles
             if (self.current_obstacle_type == ObstacleType.WALL):
                 self.field_buttons[row][column].config(state="disabled", bg=self.wall_color) 
-                self.grid[row][column] = 1                                                              # Save obstacle in grid
+                self.grid[row][column] = self.wall_cost                                                 
             elif(self.current_obstacle_type == ObstacleType.WATER):
                 self.field_buttons[row][column].config(state="disabled", bg=self.water_color)
-                self.grid[row][column] = 1
+                self.grid[row][column] = self.water_cost
+                self.start_buttons[0].config(state="disabled")                                          # BFS doens't work with weigthed graph
 
     def init_app(self):
         self.app_root.title("Pathfinder Visualizer")
@@ -202,7 +206,7 @@ class PathfinderVisualizer:
         self.algo_stats_text.config(state="disabled")
 
     def get_new_grid(self):
-        return [[0 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
+        return [[1 for _ in range(self.GRID_SIZE)] for _ in range(self.GRID_SIZE)]
 
 
 if __name__ == "__main__":

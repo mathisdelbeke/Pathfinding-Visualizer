@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from collections import deque
 import heapq
 
-
 @dataclass
 class AlgoResults:
     path : list
@@ -32,7 +31,7 @@ def bfs(grid, start, destination):
             # Check bounds
             if 0 <= nx < rows and 0 <= ny < cols:
                 #check new and walkable
-                if not visited[nx][ny] and grid[nx][ny] == 0:
+                if not visited[nx][ny] and grid[nx][ny] != float('inf'):
                     visited[nx][ny] = True
                     discovered_in_order.append((nx, ny))
                     parent[nx][ny] = (x, y)
@@ -73,8 +72,8 @@ def dijkstra(grid, start, destination):
 
         for dx, dy in directions:
             nx, ny = x + dx, y + dy
-            if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] == 0:
-                new_dist = current_dist + 1                                 # Every jump is cost of 1
+            if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] != float('inf'):
+                new_dist = current_dist + grid[nx][ny]                                
                 if new_dist < dist[nx][ny]:                                 # Might rediscovered a node, but now with a shorter path
                     dist[nx][ny] = new_dist
                     parent[nx][ny] = (x, y)
@@ -113,10 +112,10 @@ def a_star(grid, start, destination):
         for dx, dy in directions:
             neighbor = (current[0] + dx, current[1] + dy)
             if 0 <= neighbor[0] < rows and 0 <= neighbor[1] < cols:
-                if grid[neighbor[0]][neighbor[1]] == 1:                             # If obstacle
+                if grid[neighbor[0]][neighbor[1]] == float('inf'):                  # If wall
                     continue
 
-                tentative_g = current_g + 1                                         # Every jump is cost of 1 
+                tentative_g = current_g + grid[neighbor[0]][neighbor[1]]                                        
 
                 if neighbor not in g_score or tentative_g < g_score[neighbor]:      # Might rediscovered a node, but now with a shorter known path
                     g_score[neighbor] = tentative_g
